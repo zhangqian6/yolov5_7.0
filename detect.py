@@ -36,11 +36,11 @@ from pathlib import Path
 
 import torch
 
-FILE = Path(__file__).resolve()
+FILE = Path(__file__).resolve() # 当前模块的绝对路径
 ROOT = FILE.parents[0]  # YOLOv5 root directory
-if str(ROOT) not in sys.path:
+if str(ROOT) not in sys.path: #模块的查询路径的列表
     sys.path.append(str(ROOT))  # add ROOT to PATH
-ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
+ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative绝对路径转相对路径
 
 from models.common import DetectMultiBackend
 from utils.dataloaders import IMG_FORMATS, VID_FORMATS, LoadImages, LoadScreenshots, LoadStreams
@@ -52,7 +52,7 @@ from utils.torch_utils import select_device, smart_inference_mode
 
 @smart_inference_mode()
 def run(
-        weights=ROOT / 'yolov5s.pt',  # model path or triton URL
+        weights=ROOT / 'runs/train/Mish/weights/best.pt',  # model path or triton URL
         source=ROOT / 'data/images',  # file/dir/URL/glob/screen/0(webcam)
         data=ROOT / 'data/coco128.yaml',  # dataset.yaml path
         imgsz=(640, 640),  # inference size (height, width)
@@ -83,23 +83,24 @@ def run(
     source = str(source)
     save_img = not nosave and not source.endswith('.txt')  # save inference images
     is_file = Path(source).suffix[1:] in (IMG_FORMATS + VID_FORMATS)
-    is_url = source.lower().startswith(('rtsp://', 'rtmp://', 'http://', 'https://'))
-    webcam = source.isnumeric() or source.endswith('.streams') or (is_url and not is_file)
+    is_url = source.lower().startswith(('rtsp://', 'rtmp://', 'http://', 'https://')) # 判断是否是网络流地址
+    webcam = source.isnumeric() or source.endswith('.streams') or (is_url and not is_file) # isnumeric()用来判断字符串是否由数字组成
     screenshot = source.lower().startswith('screen')
     if is_url and is_file:
         source = check_file(source)  # download
 
+    # 保存结果的文件夹
     # Directories
     save_dir = increment_path(Path(project) / name, exist_ok=exist_ok)  # increment run
     (save_dir / 'labels' if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
 
-    # Load model
-    device = select_device(device)
-    model = DetectMultiBackend(weights, device=device, dnn=dnn, data=data, fp16=half)
-    stride, names, pt = model.stride, model.names, model.pt
-    imgsz = check_img_size(imgsz, s=stride)  # check image size
+    # Load model 加载模型
+    device = select_device(device) # 选择设备
+    model = DetectMultiBackend(weights, device=device, dnn=dnn, data=data, fp16=half)# 根据不同框架加载模型
+    stride, names, pt = model.stride, model.names, model.pt # stride为模型步长，一般为32
+    imgsz = check_img_size(imgsz, s=stride)  # check image size 输入图片的大小
 
-    # Dataloader
+    # Dataloader 加载待预测图片
     bs = 1  # batch_size
     if webcam:
         view_img = check_imshow(warn=True)
@@ -112,20 +113,20 @@ def run(
     vid_path, vid_writer = [None] * bs, [None] * bs
 
     # Run inference
-    model.warmup(imgsz=(1 if pt or model.triton else bs, 3, *imgsz))  # warmup
+    model.warmup(imgsz=(1 if pt or model.triton else bs, 3, *imgsz))  # warmup热身
     seen, windows, dt = 0, [], (Profile(), Profile(), Profile())
-    for path, im, im0s, vid_cap, s in dataset:
+    for path, im, im0s, vid_cap, s in dataset: # im为（3，640,480)
         with dt[0]:
-            im = torch.from_numpy(im).to(model.device)
-            im = im.half() if model.fp16 else im.float()  # uint8 to fp16/32
-            im /= 255  # 0 - 255 to 0.0 - 1.0
+            im = torch.from_numpy(im).to(model.device)# 将np格式转成pytorch支持的tensor格式，再放到GPU或CPU上
+            im = im.half() if model.fp16 else im.float()  # uint8 to fp16/32 判断模型有没有用到半精度
+            im /= 255  # 0 - 255 to 0.0 - 1.0 归一化
             if len(im.shape) == 3:
                 im = im[None]  # expand for batch dim
 
         # Inference
         with dt[1]:
-            visualize = increment_path(save_dir / Path(path).stem, mkdir=True) if visualize else False
-            pred = model(im, augment=augment, visualize=visualize)
+            visualize = increment_path(save_dir / Path(path).stem, mkdir=True) if visualize else False # visualize是是否保存特征图
+            pred = model(im, augment=augment, visualize=visualize) # augment是是否进行数据增强
 
         # NMS
         with dt[2]:
@@ -133,10 +134,10 @@ def run(
 
         # Second-stage classifier (optional)
         # pred = utils.general.apply_classifier(pred, classifier_model, im, im0s)
-
+        mmm = 0
         # Process predictions
         for i, det in enumerate(pred):  # per image
-            seen += 1
+            seen += 1  # 计数功能
             if webcam:  # batch_size >= 1
                 p, im0, frame = path[i], im0s[i].copy(), dataset.count
                 s += f'{i}: '
@@ -152,7 +153,7 @@ def run(
             annotator = Annotator(im0, line_width=line_thickness, example=str(names))
             if len(det):
                 # Rescale boxes from img_size to im0 size
-                det[:, :4] = scale_boxes(im.shape[2:], det[:, :4], im0.shape).round()
+                det[:, :4] = scale_boxes(im.shape[2:], det[:, :4], im0.shape).round() # 坐标映射
 
                 # Print results
                 for c in det[:, 5].unique():
@@ -176,6 +177,8 @@ def run(
 
             # Stream results
             im0 = annotator.result()
+            print(mmm)
+            mmm += 1
             if view_img:
                 if platform.system() == 'Linux' and p not in windows:
                     windows.append(p)
@@ -218,15 +221,15 @@ def run(
 
 def parse_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'yolov5s.pt', help='model path or triton URL')
-    parser.add_argument('--source', type=str, default=ROOT / 'data/images', help='file/dir/URL/glob/screen/0(webcam)')
+    parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'runs/train/Mish/weights/best.pt', help='model path or triton URL')
+    parser.add_argument('--source', type=str, default=ROOT / '0', help='file/dir/URL/glob/screen/0(webcam)')
     parser.add_argument('--data', type=str, default=ROOT / 'data/coco128.yaml', help='(optional) dataset.yaml path')
     parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=[640], help='inference size h,w')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.45, help='NMS IoU threshold')
     parser.add_argument('--max-det', type=int, default=1000, help='maximum detections per image')
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
-    parser.add_argument('--view-img', action='store_true', help='show results')
+    parser.add_argument('--view-img', action='store_false', help='show results')
     parser.add_argument('--save-txt', action='store_true', help='save results to *.txt')
     parser.add_argument('--save-conf', action='store_true', help='save confidences in --save-txt labels')
     parser.add_argument('--save-crop', action='store_true', help='save cropped prediction boxes')

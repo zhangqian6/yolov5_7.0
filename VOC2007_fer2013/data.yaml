@@ -1,0 +1,7 @@
+train: X:\毕业设计\源码\yolov5_7.0\yolov5\VOC2007_fer2013\images\train
+val: X:\毕业设计\源码\yolov5_7.0\yolov5\VOC2007_fer2013\images\val
+test: X:\毕业设计\源码\yolov5_7.0\yolov5\VOC2007_fer2013\images\test
+
+nc: 7
+names: ['anger','disgust','fear','happy','neutral','sad','surprised']
+

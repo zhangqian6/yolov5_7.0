@@ -311,7 +311,7 @@ class LoadImages:
         if self.transforms:
             im = self.transforms(im0)  # transforms
         else:
-            im = letterbox(im0, self.img_size, stride=self.stride, auto=self.auto)[0]  # padded resize
+            im = letterbox(im0, self.img_size, stride=self.stride, auto=self.auto)[0]  # padded resize将原图变成特定大小的图片(640,480,3)
             im = im.transpose((2, 0, 1))[::-1]  # HWC to CHW, BGR to RGB
             im = np.ascontiguousarray(im)  # contiguous
 
@@ -1215,7 +1215,7 @@ def create_classification_dataloader(path,
     return InfiniteDataLoader(dataset,
                               batch_size=batch_size,
                               shuffle=shuffle and sampler is None,
-                              num_workers=nw,
+                              num_workers=0,
                               sampler=sampler,
                               pin_memory=PIN_MEMORY,
                               worker_init_fn=seed_worker,
