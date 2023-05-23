@@ -11,5 +11,5 @@
 
 
 最后的效果图
-![img.png](img.png)
+![img.png](https://github.com/zhangqian6/yolov5_7.0/blob/main/img.png)
 
