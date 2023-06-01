@@ -41,13 +41,13 @@ class Detect(nn.Module):
     dynamic = False  # force grid reconstruction
     export = False  # export mode
 
-    def __init__(self, nc=80, anchors=(), ch=(), inplace=True):  # detection layer
-        super().__init__()
+    def __init__(self, nc=80, anchors=(), ch=(), inplace=True):  # detection layer     anchors=[[10,13,16,30,33,23],[30,61,62,45,59,119],[116,90,156,198,373,326]]
+        super().__init__()                                           # ch = [128,256,512] nc=7
         self.nc = nc  # number of classes
-        self.no = nc + 5  # number of outputs per anchor
-        self.nl = len(anchors)  # number of detection layers
-        self.na = len(anchors[0]) // 2  # number of anchors
-        self.grid = [torch.empty(0) for _ in range(self.nl)]  # init grid
+        self.no = nc + 5  # number of outputs per anchor no=12
+        self.nl = len(anchors)  # number of detection layers   nl=3
+        self.na = len(anchors[0]) // 2  # number of anchors   na=3
+        self.grid = [torch.empty(0) for _ in range(self.nl)]  # init grid  grid:[tensor([]), tensor([]), tensor([])]
         self.anchor_grid = [torch.empty(0) for _ in range(self.nl)]  # init anchor grid
         self.register_buffer('anchors', torch.tensor(anchors).float().view(self.nl, -1, 2))  # shape(nl,na,2)
         self.m = nn.ModuleList(nn.Conv2d(x, self.no * self.na, 1) for x in ch)  # output conv

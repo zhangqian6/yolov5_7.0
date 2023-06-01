@@ -17,6 +17,7 @@ from pyqt.io import Ui_MainWindow
 from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog
 from PyQt5 import QtWidgets, QtCore
 from PyQt5 import QtGui
+from PyQt5.QtGui import QColor
 from utils.torch_utils import select_device
 from models.common import DetectMultiBackend
 from utils.general import check_img_size, Profile, increment_path, non_max_suppression, scale_boxes, xyxy2xywh, \
@@ -61,15 +62,17 @@ class main_window(QMainWindow, Ui_MainWindow):
     # 直方图初始化
     def init_pic(self):
         # 直方图
-        xax = pg.AxisItem(orientation='bottom', maxTickLength=5)
+        # xax = pg.AxisItem(orientation='bottom', )
         # xax.setHeight(h=40)
-        self.pw = pg.PlotWidget(axisItems={'bottom': xax})
+        self.pw = pg.PlotWidget()#axisItems={'bottom': xax}
         self.pw.setYRange(0, 1)
         # x轴
         xTick = [(0, '生气'), (1, '厌恶'), (2, '害怕'), (3, '高兴'), (4, '中性'), (5, '悲伤'),
-                 (6, '惊讶')]
-        xax = self.pw.getAxis('bottom')
-        xax.setTicks([xTick])
+                  (6, '惊讶')]
+        pltItem = self.pw.getPlotItem()
+        bottom_axis = pltItem.getAxis('bottom')
+        bottom_axis.setTicks([xTick])
+        # bottom_axis.maxTicklength = 5
         # y轴名字
         y_name = '置信度'
         self.pw.setLabel('left', y_name)
@@ -140,7 +143,7 @@ class main_window(QMainWindow, Ui_MainWindow):
                             help='(optional) dataset.yaml path')
         parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=[640],
                             help='inference size h,w')
-        parser.add_argument('--conf_thres', type=float, default=0.001, help='confidence threshold')
+        parser.add_argument('--conf_thres', type=float, default=0.00, help='confidence threshold')
         parser.add_argument('--iou_thres', type=float, default=0.45, help='NMS IoU threshold')
         parser.add_argument('--max-det', type=int, default=1000, help='maximum detections per image')
         parser.add_argument('--device', default='0', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
@@ -221,7 +224,7 @@ class main_window(QMainWindow, Ui_MainWindow):
     # 子线程推理
     def handle_result(self, data):
         img = data[0]
-        info = data[1]
+        ratio = data[1]
         # 直接将原始img上的检测结果进行显示
         show = cv2.resize(img, (640, 480))
         self.result = cv2.cvtColor(show, cv2.COLOR_BGR2RGB)
@@ -231,21 +234,8 @@ class main_window(QMainWindow, Ui_MainWindow):
         self.label.setScaledContents(True)  # 设置图像自适应界面大小
 
         # 提取出表情类别和置信度
-        xxx = info.split(' ')
-        if xxx[0] == 'anger':
-            self.y_data = [float(xxx[1]), 0, 0, 0, 0, 0, 0]
-        elif xxx[0] == 'disgust':
-            self.y_data = [0, float(xxx[1]), 0, 0, 0, 0, 0]
-        elif xxx[0] == 'fear':
-            self.y_data = [0, 0, float(xxx[1]), 0, 0, 0, 0]
-        elif xxx[0] == 'happy':
-            self.y_data = [0, 0, 0, float(xxx[1]), 0, 0, 0]
-        elif xxx[0] == 'neutral':
-            self.y_data = [0, 0, 0, 0, float(xxx[1]), 0, 0]
-        elif xxx[0] == 'sad':
-            self.y_data = [0, 0, 0, 0, 0, float(xxx[1]), 0]
-        elif xxx[0] == 'surprised':
-            self.y_data = [0, 0, 0, 0, 0, 0, float(xxx[1])]
+
+        self.y_data = ratio
         self.pre_data()
     # 打开视频并检测
     def detect_vedio(self):
@@ -292,8 +282,9 @@ class main_window(QMainWindow, Ui_MainWindow):
         if self.iii == 1:
             self.pw.removeItem(self.barItem)
             self.iii = 0
-        x = [0, 1, 2, 3, 4, 5, 6]
-        self.barItem = pg.BarGraphItem(x=x, height=self.y_data, width=0.8, brush=self.color_bar)
+        x = [0, 1, 2, 3, 4, 5, 6]# , height=self.y_data
+        self.barItem = pg.BarGraphItem(x=x, height=self.y_data,width=0.8, brush=self.color_bar)
+        self.barItem.setOpts(pen={'color':QColor(0,0,0,0)})
         self.pw.addItem(self.barItem)
         self.iii = 1
 

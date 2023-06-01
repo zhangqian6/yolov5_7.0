@@ -1,7 +1,9 @@
 from PyQt5.QtCore import QThread,pyqtSignal
 from utils.augmentations import letterbox
+from PyQt5 import QtWidgets
 import numpy as np
 import torch
+import pyqtgraph as pg
 from utils.general import non_max_suppression,scale_boxes
 from utils.plots import Annotator,colors
 
@@ -15,10 +17,10 @@ class MyThread(QThread):
 
     def runss(self,img):
         # 耗时操作
-        img,info = self.detect(img)
+        img,ratio = self.detect(img)
 
         #发射信号，通知主线程完成
-        data = [img,info]
+        data = [img,ratio]
         self.finished_signal.emit(data)
     # 单张图片检测
     def detect(self, img):
@@ -45,25 +47,46 @@ class MyThread(QThread):
         # pred = utils.general.apply_classifier(pred, classifier_model, im, im0s)
         # Process predictions
         labels = {'anger':0.000,'disgust':0.000,'fear':0.000,'happy':0.000,'neutral':0.000,'sad':0.000,'surprised':0.000}
+        count = [0,0,0,0,0,0,0]
+        max=...
+        max_conf=...
         for i, det in enumerate(pred):  # per image
             annotator = Annotator(img, line_width=self.main_thread.opt.line_thickness, example=str(self.names))
             if len(det):
                 # Rescale boxes from img_size to im0 size
                 det[:, :4] = scale_boxes(im.shape[2:], det[:, :4], img.shape).round()
-
+                print(len(det))
                 # Write results
+                x = 0
                 for *xyxy, conf, cls in reversed(det):
                     print('ccccllllssss为',cls,'conf为',conf)
                     if self.main_thread.save_img or self.main_thread.opt.save_crop or self.main_thread.opt.view_img:  # Add bbox to image
                         c = int(cls)  # integer class
                         label = None if self.main_thread.opt.hide_labels else (
                             self.names[c] if self.main_thread.opt.hide_conf else f'{self.names[c]} {conf:.2f}')
-                        annotator.box_label(xyxy, label, color=colors(c, True))
+                        x += 1
                         xxx = label.split(' ')
                         name = xxx[0]
-                        print(label)
+                        if x==len(det):
+                            annotator.box_label(xyxy, label, color=colors(c, True))
+                        else:
+                            count[c] += 1
+                        max=c
+                        max_conf=float(xxx[1])
                         labels[name] += float(xxx[1])
+
             img = annotator.result()
         print('anger:',labels['anger'],'disgust:',labels['disgust'],'fear:',labels['fear'],'happy:',labels['happy'],'neutral:',labels['neutral'],'sad',labels['sad'],'surprised:',labels['surprised'])
-        return img,label
+        total = sum(count)
+        ratio = [x/total*0.13 for x in count]
+        for x in range(len(ratio)):
+            if ratio[x]<0.01:
+                ratio[x]=0
+            else:
+                ratio[x]=float(ratio[x])
+                ratio[x]=round(ratio[x],2)
+        ratio[max] += max_conf
+        print(ratio)
+        return img,ratio
+
 
