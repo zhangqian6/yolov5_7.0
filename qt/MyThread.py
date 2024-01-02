@@ -56,23 +56,29 @@ class MyThread(QThread):
                 # Rescale boxes from img_size to im0 size
                 det[:, :4] = scale_boxes(im.shape[2:], det[:, :4], img.shape).round()
                 print(len(det))
+                print(det[0])
                 # Write results
                 x = 0
-                for *xyxy, conf, cls in reversed(det):
+                for *xyxy, conf, cls in det:
                     print('ccccllllssss为',cls,'conf为',conf)
+
+                    if x == 10:
+                        break
                     if self.main_thread.save_img or self.main_thread.opt.save_crop or self.main_thread.opt.view_img:  # Add bbox to image
                         c = int(cls)  # integer class
                         label = None if self.main_thread.opt.hide_labels else (
                             self.names[c] if self.main_thread.opt.hide_conf else f'{self.names[c]} {conf:.2f}')
-                        x += 1
+
                         xxx = label.split(' ')
                         name = xxx[0]
-                        if x==len(det):
+                        if x==0:
                             annotator.box_label(xyxy, label, color=colors(c, True))
+                            max = c
+                            max_conf = float(xxx[1])
                         else:
                             count[c] += 1
-                        max=c
-                        max_conf=float(xxx[1])
+                        x += 1
+
                         labels[name] += float(xxx[1])
 
             img = annotator.result()

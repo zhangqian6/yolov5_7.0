@@ -221,6 +221,11 @@ class main_window(QMainWindow, Ui_MainWindow):
                 # thread.start()
                 self.my_thread.runss(img)
 
+        self.pushButton_3.setEnabled(True)
+        self.button1.setEnabled(True)
+        self.pushButton.setEnabled(True)
+        self.pushButton_2.setEnabled(True)
+
     # 子线程推理
     def handle_result(self, data):
         img = data[0]
@@ -308,10 +313,12 @@ class main_window(QMainWindow, Ui_MainWindow):
             self.button1.setEnabled(True)
             self.button2.setEnabled(True)
             self.pushButton.setEnabled(True)
+            self.pushButton_3.setEnabled()
         else:
             self.button1.setEnabled(True)
             self.button2.setEnabled(True)
             self.pushButton_2.setEnabled(True)
+            self.pushButton_3.setEnabled(True)
 
 
 

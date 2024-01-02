@@ -41,8 +41,9 @@ class Detect(nn.Module):
     dynamic = False  # force grid reconstruction
     export = False  # export mode
 
-    def __init__(self, nc=80, anchors=(), ch=(), inplace=True):  # detection layer     anchors=[[10,13,16,30,33,23],[30,61,62,45,59,119],[116,90,156,198,373,326]]
-        super().__init__()                                           # ch = [128,256,512] nc=7
+    def __init__(self, nc=80, anchors=(), ch=(),
+                 inplace=True):  # detection layer     anchors=[[10,13,16,30,33,23],[30,61,62,45,59,119],[116,90,156,198,373,326]]
+        super().__init__()  # ch = [128,256,512] nc=7
         self.nc = nc  # number of classes
         self.no = nc + 5  # number of outputs per anchor no=12
         self.nl = len(anchors)  # number of detection layers   nl=3
@@ -299,7 +300,8 @@ class ClassificationModel(BaseModel):
 def parse_model(d, ch):  # model_dict, input_channels(3):[3]
     # Parse a YOLOv5 model.yaml dictionary
     LOGGER.info(f"\n{'':>3}{'from':>18}{'n':>3}{'params':>10}  {'module':<40}{'arguments':<30}")
-    anchors, nc, gd, gw, act = d['anchors'], d['nc'], d['depth_multiple'], d['width_multiple'], d.get('activation') # gd0.33 gw0.5
+    anchors, nc, gd, gw, act = d['anchors'], d['nc'], d['depth_multiple'], d['width_multiple'], d.get(
+        'activation')  # gd0.33 gw0.5
     if act:
         Conv.default_act = eval(act)  # redefine default activation, i.e. Conv.default_act = nn.SiLU()
         LOGGER.info(f"{colorstr('activation:')} {act}")  # print
@@ -316,13 +318,13 @@ def parse_model(d, ch):  # model_dict, input_channels(3):[3]
         # 网络数number还要乘上深度参数
         n = n_ = max(round(n * gd), 1) if n > 1 else n  # depth gain
         if m in {
-                Conv, GhostConv, Bottleneck, GhostBottleneck, SPP, SPPF, DWConv, MixConv2d, Focus, CrossConv,
-                BottleneckCSP, C3, C3TR, C3SPP, C3Ghost, nn.ConvTranspose2d, DWConvTranspose2d, C3x}:
-            c1, c2 = ch[f], args[0] # c1:3,  c2:64
+            Conv, GhostConv, Bottleneck, GhostBottleneck, SPP, SPPF, DWConv, MixConv2d, Focus, CrossConv,
+            BottleneckCSP, C3, C3TR, C3SPP, C3Ghost, nn.ConvTranspose2d, DWConvTranspose2d, C3x}:
+            c1, c2 = ch[f], args[0]  # c1:3,  c2:64
             if c2 != no:  # if not output
-                c2 = make_divisible(c2 * gw, 8) # c2:32
+                c2 = make_divisible(c2 * gw, 8)  # c2:32
 
-            args = [c1, c2, *args[1:]] # [3,32,6,2,2]
+            args = [c1, c2, *args[1:]]  # [3,32,6,2,2]
             if m in {BottleneckCSP, C3, C3TR, C3Ghost, C3x}:
                 args.insert(2, n)  # number of repeats
                 n = 1
@@ -341,7 +343,9 @@ def parse_model(d, ch):  # model_dict, input_channels(3):[3]
             c2 = ch[f] * args[0] ** 2
         elif m is Expand:
             c2 = ch[f] // args[0] ** 2
-
+        elif m is CARAFE:
+            c2 = ch[f]
+            args = [c2, *args]
         else:
             c2 = ch[f]
 
