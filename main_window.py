@@ -1,7 +1,7 @@
 import sys
-import detect
+# import detect
 import argparse
-import torch
+# import torch
 import os
 import numpy as np
 import pyqtgraph as pg
@@ -13,7 +13,7 @@ ROOT = FILE.parents[0]  # YOLOv5 root directory
 if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))  # add ROOT to PATH
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
-from pyqt.io import Ui_MainWindow
+import pyqt.windows22
 from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog
 from PyQt5 import QtWidgets, QtCore
 from PyQt5 import QtGui
@@ -26,7 +26,7 @@ from utils.dataloaders import IMG_FORMATS, VID_FORMATS, LoadImages, LoadStreams
 from utils.augmentations import letterbox
 
 from utils.plots import Annotator, colors, save_one_box
-from MyThread import MyThread
+from qt.MyThread import MyThread
 from typing import Dict, Any
 import cv2
 
@@ -34,7 +34,7 @@ pg.setConfigOption('background', 'w')
 pg.setConfigOption('foreground', 'k')
 
 
-class main_window(QMainWindow, Ui_MainWindow):
+class main_window(QMainWindow, pyqt.windows22.Ui_MainWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
