@@ -6,7 +6,7 @@
 
 1.下载requirements.txt中的包和pyqt5相关的包
 
-2.运行qt目录下的main_window.py
+2.运行main_window.py文件（选择best.pt模型文件）
 
 
 
